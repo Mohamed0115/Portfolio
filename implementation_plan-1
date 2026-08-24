@@ -1,0 +1,445 @@
+# Mohamed Ali — Professional Portfolio Website
+
+Build a production-ready, multi-page portfolio website for a Robotics & Mechatronics Engineer, featuring dark/light mode, dynamic project pages, 3D CAD viewer, lecture gallery, and a documentation-style navigation system.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Tech Stack Choice:** I'm proposing **Next.js 15 (App Router) + Tailwind CSS v4 + Framer Motion + Three.js**. This gives us:
+> - Static Site Generation (SSG) for free hosting on Vercel/Netlify
+> - File-based routing for clean URLs (`/projects/robotic-arm`, `/lectures`)
+> - React Server Components for fast initial loads
+> - Easy JSON-driven dynamic pages
+>
+> **Alternative:** If you prefer a simpler setup (no Node.js build step for hosting), we could use Vite + React. But Next.js is ideal for Vercel deployment.
+
+> [!IMPORTANT]
+> **Hosting Recommendation:** **Vercel** (free tier) is the best option for this Next.js site:
+> - Zero-config deployment — just connect your GitHub repo
+> - Free custom domain support
+> - Automatic HTTPS, CDN, and preview deployments
+> - Perfect for static/SSG Next.js sites
+>
+> **Alternatives:** Netlify (also free), GitHub Pages (needs `next export`), Cloudflare Pages.
+
+> [!WARNING]
+> **3D CAD Viewer:** The `.stl`/`.glb` viewer using Three.js will add ~150KB to the bundle. It will only load on project pages that actually include 3D models (code-split). You'll need to convert your SolidWorks files to `.glb` or `.stl` format for the viewer — I'll document how.
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> 1. **Professional Photo:** Do you have a professional headshot/photo you'd like to use in the About Me section? If so, please provide it. Otherwise I'll create a styled placeholder with your initials.
+> 2. **Projects 3 & 4 Details:** You mentioned "Univest's sheet metal projects" and "Hoist mechanism Design" but didn't provide full descriptions. Should I create placeholder sections for these that you can fill in later?
+> 3. **Lectures Content:** You haven't provided any lecture data yet. Should I create the Lectures page structure with sample/placeholder data that you can populate later?
+> 4. **Color Palette Preference:** I'm planning a dark theme with deep navy/slate background + electric blue/cyan accents. Do you have any color preferences?
+> 5. **Resume/CV Download:** Would you like a "Download Resume" button in the hero or navbar?
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph TD
+    A["Next.js App Router"] --> B["Layout (Navbar + Footer)"]
+    B --> C["Home Page /"]
+    B --> D["Projects Page /projects"]
+    B --> E["Project Detail /projects/[slug]"]
+    B --> F["Lectures Page /lectures"]
+    
+    G["data/projects.json"] --> D
+    G --> E
+    G --> C
+    H["data/lectures.json"] --> F
+    
+    I["Components Library"] --> C
+    I --> D
+    I --> E
+    I --> F
+    
+    I --> I1["Navbar"]
+    I --> I2["TOC Sidebar"]
+    I --> I3["BackToTop FAB"]
+    I --> I4["ProjectCard"]
+    I --> I5["FilterBar"]
+    I --> I6["3D ModelViewer"]
+    I --> I7["VideoEmbed"]
+    I --> I8["ThemeToggle"]
+```
+
+---
+
+## Proposed Changes
+
+### 1. Project Scaffolding & Configuration
+
+#### [NEW] Next.js project initialization
+- `npx create-next-app@latest ./ --typescript --tailwind --eslint --app --src-dir --no-import-alias`
+- Install additional dependencies: `framer-motion`, `@react-three/fiber`, `@react-three/drei`, `three`, `react-icons`, `lucide-react`
+
+#### [NEW] [`tailwind.config.ts`](file:///e:/MDM/MIDO/protfolio/tailwind.config.ts)
+- Custom color palette (dark navy primary, cyan/blue accents)
+- Custom fonts (Inter + Poppins from Google Fonts)
+- Animation keyframes for fade-in, slide-up effects
+- Dark mode: `class` strategy (dark by default)
+
+#### [NEW] [`src/app/globals.css`](file:///e:/MDM/MIDO/protfolio/src/app/globals.css)
+- Tailwind directives
+- Custom scrollbar styling
+- Smooth scroll behavior
+- Global typography overrides
+
+---
+
+### 2. Data Layer (JSON-Driven Content)
+
+#### [NEW] [`src/data/projects.ts`](file:///e:/MDM/MIDO/protfolio/src/data/projects.ts)
+Each project object includes:
+```typescript
+interface Project {
+  slug: string;
+  title: string;
+  subtitle: string;
+  timeline: string;
+  role: string;
+  association: string;
+  description: string;
+  thumbnail: string;
+  coreCategory: string[];        // "Mechanical Design" | "IoT" | "Robotics"
+  tags: string[];                // e.g., ["FEA", "ROS2", "SolidWorks"]
+  isFeatured: boolean;
+  actionButtons: ActionButton[]; // {label, type: "pdf"|"video"|"link", url}
+  sections: Section[];           // {title, content (markdown/HTML), media[]}
+  cadModels?: CadModel[];        // {filename, url, format: "glb"|"stl"}
+}
+```
+
+**Pre-populated projects:**
+1. Robotic Arm for Automotive Assembly (featured)
+2. Evaluating Fiber-Reinforced Polymers (not featured)
+3. Univest's Sheet Metal Projects (featured, placeholder)
+4. Hoist Mechanism Design (placeholder)
+5. SectorB5 IoT Project (featured)
+
+#### [NEW] [`src/data/lectures.ts`](file:///e:/MDM/MIDO/protfolio/src/data/lectures.ts)
+- Lecture data structure with title, description, tags, video URL, thumbnail
+
+#### [NEW] [`src/data/personal.ts`](file:///e:/MDM/MIDO/protfolio/src/data/personal.ts)
+- All personal info: name, title, bio, about, skills, experience, services, career objective, social links
+
+---
+
+### 3. Shared Components
+
+#### [NEW] [`src/components/layout/Navbar.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/layout/Navbar.tsx)
+- Fixed top navbar with logo/name, page links (Home, Projects, Lectures)
+- Theme toggle (dark/light) with animated icon
+- Mobile hamburger menu with slide-out drawer
+- Active page indicator with underline animation
+- Glassmorphism backdrop-blur styling
+
+#### [NEW] [`src/components/layout/Footer.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/layout/Footer.tsx)
+- Social links (LinkedIn, GitHub, YouTube, Email)
+- Copyright notice
+- Minimal, clean design
+
+#### [NEW] [`src/components/layout/TOCSidebar.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/layout/TOCSidebar.tsx)
+- Automatically detects `<h2>` and `<h3>` headings via `IntersectionObserver`
+- Generates anchor links with active section highlighting
+- Sticky positioning on desktop (right side)
+- On mobile: collapses into a floating "Table of Contents" button at bottom → slide-up drawer
+- Smooth scroll on click
+- Framer Motion transitions
+
+#### [NEW] [`src/components/ui/BackToTop.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/ui/BackToTop.tsx)
+- Floating action button (bottom-right)
+- Hidden at top, fades in after scrolling past hero
+- Smooth scroll to top on click
+- Upward arrow icon with hover animation
+
+#### [NEW] [`src/components/ui/ThemeToggle.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/ui/ThemeToggle.tsx)
+- Sun/Moon icon toggle with rotation animation
+- Persists preference in localStorage
+- Dark mode default
+
+#### [NEW] [`src/components/ui/SectionWrapper.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/ui/SectionWrapper.tsx)
+- Reusable section container with fade-in-on-scroll animation (Framer Motion `useInView`)
+- Consistent padding, max-width, and section ID for anchor linking
+
+#### [NEW] [`src/components/ui/VideoEmbed.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/ui/VideoEmbed.tsx)
+- Responsive 16:9 video container
+- Supports YouTube, Vimeo embeds and HTML5 `<video>` for MP4
+- Lazy loading for performance
+
+#### [NEW] [`src/components/ui/ModelViewer.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/ui/ModelViewer.tsx)
+- Three.js-based 3D viewer using `@react-three/fiber` + `@react-three/drei`
+- Loads `.glb` and `.stl` files
+- Orbit controls (rotate, zoom, pan)
+- Loading spinner while model loads
+- Code-split with `React.lazy()` — only loads on pages that need it
+
+#### [NEW] [`src/components/ui/FilterBar.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/ui/FilterBar.tsx)
+- Category buttons (Mechanical Design, IoT, Robotics) + dynamic tag pills
+- Active state styling (filled background)
+- Multi-select capability
+- Framer Motion layout animations when filtering
+
+---
+
+### 4. Home Page
+
+#### [NEW] [`src/app/page.tsx`](file:///e:/MDM/MIDO/protfolio/src/app/page.tsx)
+Sections (each in its own component file under `src/components/home/`):
+
+#### [NEW] `src/components/home/Hero.tsx`
+- Full-viewport hero with animated gradient background (subtle mesh gradient)
+- Large name display with typing/reveal animation
+- Title: "Robotics & Mechatronics Engineer"
+- Polished intro paragraph
+- Two CTA buttons: "View Projects" → `/projects`, "Contact Me" → `#contact`
+- Floating geometric shapes or particle animation in background (subtle)
+
+#### [NEW] `src/components/home/About.tsx`
+- Two-column layout: Photo (left) + Bio text (right)
+- Professional photo placeholder (styled initials avatar with gradient border)
+- Polished about me content
+- Fade-in animation
+
+#### [NEW] `src/components/home/Skills.tsx`
+- Categorized skill cards with icons
+- 3 main groups: Engineering & Design, Software & Programming, Professional Skills
+- Each skill with icon + name + optional proficiency indicator
+- Card hover effects (lift + glow)
+
+#### [NEW] `src/components/home/FeaturedProjects.tsx`
+- Grid of 3 featured project cards (Robotic Arm, Sheet Metal, IoT)
+- Each card: thumbnail, title, tags, brief description
+- Hover effect: card lifts, subtle shadow
+- "View All Projects →" link at bottom
+
+#### [NEW] `src/components/home/Experience.tsx`
+- Vertical timeline layout with animated entry
+- Each entry: company logo placeholder, role, company, duration, location, skills
+- 3 entries from LinkedIn data
+
+#### [NEW] `src/components/home/Certifications.tsx`
+- Scrollable card grid or accordion
+- 11 certifications with issuer, date, skills
+
+#### [NEW] `src/components/home/Services.tsx`
+- 4 service cards with icons
+- Hover animation (scale + glow)
+
+#### [NEW] `src/components/home/CareerObjective.tsx`
+- Prominent quote-style display with gradient accent border
+- Clean, impactful typography
+
+#### [NEW] `src/components/home/Contact.tsx`
+- Two-column: Contact form (left) + Social links & info (right)
+- Form fields: Name, Email, Subject, Message
+- HTML-only form (no backend) — can use Formspree/EmailJS later
+- Social link buttons with hover animations
+
+---
+
+### 5. Projects Page
+
+#### [NEW] [`src/app/projects/page.tsx`](file:///e:/MDM/MIDO/protfolio/src/app/projects/page.tsx)
+- FilterBar at top (3 core categories + dynamic tags)
+- Responsive grid of ProjectCards
+- Animated filtering with Framer Motion `AnimatePresence` + `layoutId`
+
+#### [NEW] [`src/components/projects/ProjectCard.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/projects/ProjectCard.tsx)
+- Thumbnail image
+- Title, timeline, association
+- Category badge + tag pills
+- Brief description (truncated)
+- Hover: lift + expanded shadow
+- Click → navigates to `/projects/[slug]`
+
+---
+
+### 6. Project Detail Pages (Dynamic)
+
+#### [NEW] [`src/app/projects/[slug]/page.tsx`](file:///e:/MDM/MIDO/protfolio/src/app/projects/%5Bslug%5D/page.tsx)
+- `generateStaticParams()` for SSG of all project slugs
+- Reads project data from `projects.ts` by slug
+- Layout: main content (left/center) + TOC sidebar (right)
+- Renders:
+  1. Project header (title, metadata, tags)
+  2. Action buttons bar (Report PDF, Video, Presentation — conditional from data)
+  3. Dynamic sections from project data (each with heading, text, images, videos)
+  4. 3D Model Viewer section (if CAD models exist)
+  5. TOC sidebar auto-generated from section headings
+
+---
+
+### 7. Lectures Page
+
+#### [NEW] [`src/app/lectures/page.tsx`](file:///e:/MDM/MIDO/protfolio/src/app/lectures/page.tsx)
+- Filter bar at top (by topic tags)
+- Responsive card grid
+- Each card: video thumbnail with play overlay, title, description, tags
+- Click → opens video modal or dedicated view page
+- Placeholder content for now
+
+#### [NEW] [`src/components/lectures/LectureCard.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/lectures/LectureCard.tsx)
+- 2/3 thumbnail with play icon overlay
+- 1/3 info section with title, description, tags
+
+#### [NEW] [`src/components/lectures/VideoModal.tsx`](file:///e:/MDM/MIDO/protfolio/src/components/lectures/VideoModal.tsx)
+- Full-screen modal with embedded video player
+- Close button, backdrop blur
+- Framer Motion enter/exit animation
+
+---
+
+### 8. Theme & Layout
+
+#### [NEW] [`src/app/layout.tsx`](file:///e:/MDM/MIDO/protfolio/src/app/layout.tsx)
+- Root layout with ThemeProvider
+- Google Fonts (Inter + Poppins) via `next/font`
+- Navbar + Footer wrapping all pages
+- BackToTop FAB
+- `<html>` with `dark` class by default
+
+#### [NEW] [`src/context/ThemeContext.tsx`](file:///e:/MDM/MIDO/protfolio/src/context/ThemeContext.tsx)
+- React Context for theme state
+- localStorage persistence
+- System preference detection
+- Dark mode default
+
+---
+
+## File Structure Summary
+
+```
+e:/MDM/MIDO/protfolio/
+├── public/
+│   ├── images/           # Project thumbnails, photos
+│   └── models/           # .glb/.stl 3D models
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx
+│   │   ├── globals.css
+│   │   ├── page.tsx          # Home
+│   │   ├── projects/
+│   │   │   ├── page.tsx      # All Projects
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx  # Project Detail
+│   │   └── lectures/
+│   │       └── page.tsx      # Lectures
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   └── TOCSidebar.tsx
+│   │   ├── ui/
+│   │   │   ├── BackToTop.tsx
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   ├── SectionWrapper.tsx
+│   │   │   ├── VideoEmbed.tsx
+│   │   │   ├── ModelViewer.tsx
+│   │   │   └── FilterBar.tsx
+│   │   ├── home/
+│   │   │   ├── Hero.tsx
+│   │   │   ├── About.tsx
+│   │   │   ├── Skills.tsx
+│   │   │   ├── FeaturedProjects.tsx
+│   │   │   ├── Experience.tsx
+│   │   │   ├── Certifications.tsx
+│   │   │   ├── Services.tsx
+│   │   │   ├── CareerObjective.tsx
+│   │   │   └── Contact.tsx
+│   │   ├── projects/
+│   │   │   └── ProjectCard.tsx
+│   │   └── lectures/
+│   │       ├── LectureCard.tsx
+│   │       └── VideoModal.tsx
+│   ├── context/
+│   │   └── ThemeContext.tsx
+│   ├── data/
+│   │   ├── projects.ts
+│   │   ├── lectures.ts
+│   │   └── personal.ts
+│   └── hooks/
+│       ├── useScrollSpy.ts    # For TOC active section detection
+│       └── useScrollPosition.ts # For BackToTop visibility
+├── tailwind.config.ts
+├── next.config.ts
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## Design System
+
+| Token | Dark Mode | Light Mode |
+|-------|-----------|------------|
+| Background Primary | `#0a0f1c` (deep navy) | `#f8fafc` (soft white) |
+| Background Secondary | `#111827` (dark slate) | `#ffffff` |
+| Background Card | `#1e293b` (slate-800) | `#ffffff` |
+| Text Primary | `#f1f5f9` (slate-100) | `#0f172a` (slate-900) |
+| Text Secondary | `#94a3b8` (slate-400) | `#64748b` (slate-500) |
+| Accent Primary | `#06b6d4` (cyan-500) | `#0891b2` (cyan-600) |
+| Accent Gradient | `cyan-400 → blue-500` | `cyan-600 → blue-700` |
+| Border | `#1e293b` (slate-800) | `#e2e8f0` (slate-200) |
+| Card Hover Glow | `cyan-500/10` shadow | `cyan-600/10` shadow |
+
+**Typography:**
+- Headings: **Poppins** (600/700 weight)
+- Body: **Inter** (400/500 weight)
+- Code: **JetBrains Mono** (monospace)
+
+---
+
+## Verification Plan
+
+### Automated Tests
+```bash
+npm run build    # Verify SSG builds without errors
+npm run lint     # ESLint check
+```
+
+### Manual Verification
+- Run `npm run dev` and test all pages in browser
+- Test responsive design at breakpoints: 375px (mobile), 768px (tablet), 1024px (laptop), 1440px (desktop)
+- Verify dark/light mode toggle
+- Test project filtering
+- Test TOC sidebar scroll spy
+- Test Back-to-Top button visibility
+- Verify no horizontal scrolling at any viewport
+- Test 3D model viewer interaction (rotate/zoom/pan)
+
+### Deployment Test
+```bash
+npm run build && npx serve out  # Test production build locally
+```
+
+---
+
+## Hosting Instructions (After Completion)
+
+### Vercel (Recommended — Free)
+1. Push your code to a GitHub repository
+2. Go to [vercel.com](https://vercel.com) → Sign up with GitHub
+3. Click "New Project" → Import your repo
+4. Vercel auto-detects Next.js — click "Deploy"
+5. Your site is live at `your-project.vercel.app`
+6. Optional: Add a custom domain in Vercel dashboard (free)
+
+### Alternative: Netlify (Free)
+1. Push to GitHub
+2. Go to [netlify.com](https://netlify.com) → "Add new site" → "Import from Git"
+3. Build command: `npm run build`, Publish directory: `.next`
+4. Deploy
+
+### Alternative: GitHub Pages (Free)
+1. Add `output: 'export'` to `next.config.ts`
+2. Run `npm run build` (generates `out/` folder)
+3. Push `out/` to a `gh-pages` branch
+4. Enable GitHub Pages in repo settings

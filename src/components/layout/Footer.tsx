@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Mail, Heart } from "lucide-react";
 import { GitHubIcon, LinkedInIcon, YouTubeIcon } from "@/components/ui/SocialIcons";
 import { personalInfo } from "@/data/personal";
+import Logo from "@/components/ui/Logo";
 
 const socialLinks = [
   { href: personalInfo.social.linkedin, icon: LinkedInIcon, label: "LinkedIn" },
@@ -21,11 +22,9 @@ export default function Footer() {
           <div>
             <Link
               href="/"
-              className="text-xl font-bold font-[family-name:var(--font-poppins)] text-text-primary"
+              className="hover:opacity-80 transition-opacity inline-block"
             >
-              <span className="text-gradient">&lt;</span>
-              {personalInfo.name.split(" ")[0]}
-              <span className="text-gradient">/&gt;</span>
+              <Logo />
             </Link>
             <p className="mt-3 text-sm text-text-secondary max-w-xs">
               {personalInfo.title} — bridging mechanical systems and intelligent

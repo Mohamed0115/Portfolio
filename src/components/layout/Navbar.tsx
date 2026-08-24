@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { personalInfo } from "@/data/personal";
+import Logo from "@/components/ui/Logo";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -51,11 +52,9 @@ export default function Navbar() {
             {/* Logo */}
             <Link
               href="/"
-              className="text-lg md:text-xl font-bold font-[family-name:var(--font-poppins)] text-text-primary hover:text-accent transition-colors"
+              className="hover:opacity-80 transition-opacity"
             >
-              <span className="text-gradient">&lt;</span>
-              {personalInfo.name.split(" ")[0]}
-              <span className="text-gradient">/&gt;</span>
+              <Logo />
             </Link>
 
             {/* Desktop Nav */}

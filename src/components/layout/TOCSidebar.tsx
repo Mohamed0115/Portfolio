@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { List, X, ChevronRight } from "lucide-react";
 
@@ -14,7 +14,7 @@ export default function TOCSidebar() {
   const [items, setItems] = useState<TOCItem[]>([]);
   const [activeId, setActiveId] = useState<string>("");
   const [isOpen, setIsOpen] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     // Detect headings
@@ -26,30 +26,34 @@ export default function TOCSidebar() {
     }));
     setItems(tocItems);
 
-    // Scroll spy
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => {
-            const rectA = a.boundingClientRect;
-            const rectB = b.boundingClientRect;
-            return rectA.top - rectB.top;
-          });
-        if (visible.length > 0) {
-          setActiveId(visible[0].target.id);
-        }
-      },
-      {
-        rootMargin: "-80px 0px -60% 0px",
-        threshold: 0.1,
-      }
-    );
+    // Scroll-based active heading detection (more reliable than IntersectionObserver)
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0);
 
-    headings.forEach((h) => observerRef.current?.observe(h));
+      // Find the active heading: last heading whose top is above 40% of viewport
+      let currentId = "";
+      const headingsArr = document.querySelectorAll("h2[id], h3[id]");
+      for (const h of headingsArr) {
+        const rect = h.getBoundingClientRect();
+        if (rect.top <= window.innerHeight * 0.4) {
+          currentId = h.id;
+        }
+      }
+      if (currentId) {
+        setActiveId(currentId);
+      } else if (headingsArr.length > 0) {
+        // At top of page, activate first heading
+        setActiveId(headingsArr[0].id);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial check
 
     return () => {
-      observerRef.current?.disconnect();
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -64,49 +68,103 @@ export default function TOCSidebar() {
     }
   };
 
+  // Get the index of a section (h2 only, for numbering)
+  const getH2Index = (item: TOCItem, index: number) => {
+    if (item.level !== 2) return null;
+    const h2Items = items.filter((i) => i.level === 2);
+    return h2Items.indexOf(item) + 1;
+  };
+
   if (items.length === 0) return null;
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block sticky top-24 self-start w-64 shrink-0">
-        <div className="pl-6 border-l border-border">
-          <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4">
-            On this page
+      <aside className="hidden lg:block sticky top-24 self-start w-72 shrink-0">
+        <div className="pl-6 border-l-2 border-border relative">
+          {/* Progress bar on the border */}
+          <div
+            className="absolute left-[-2px] top-0 w-[2px] bg-accent transition-all duration-200 rounded-full"
+            style={{ height: `${progress * 100}%` }}
+          />
+
+          <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-5 flex items-center gap-2">
+            <List size={14} />
+            On This Page
           </h4>
-          <nav className="flex flex-col gap-1">
-            {items.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`text-left text-sm py-1.5 transition-colors ${
-                  item.level === 3 ? "pl-4" : "pl-0"
-                } ${
-                  activeId === item.id
-                    ? "text-accent font-medium"
-                    : "text-text-muted hover:text-text-secondary"
-                }`}
-              >
-                <span className="flex items-center gap-1.5">
-                  {activeId === item.id && (
-                    <ChevronRight size={12} className="text-accent shrink-0" />
-                  )}
-                  <span className="line-clamp-2">{item.text}</span>
-                </span>
-              </button>
-            ))}
+          <nav className="flex flex-col gap-0.5">
+            {items.map((item, index) => {
+              const h2Num = getH2Index(item, index);
+              const isActive = activeId === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => scrollTo(item.id)}
+                  className={`group text-left py-2 px-3 rounded-lg transition-all duration-200 ${
+                    item.level === 3 ? "pl-8" : "pl-3"
+                  } ${
+                    isActive
+                      ? "bg-accent-subtle text-accent font-semibold"
+                      : "text-text-muted hover:text-text-secondary hover:bg-bg-card"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {/* Number badge for h2 */}
+                    {h2Num !== null && (
+                      <span
+                        className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0 transition-colors ${
+                          isActive
+                            ? "bg-accent text-white"
+                            : "bg-bg-card text-text-muted group-hover:bg-accent/20 group-hover:text-accent"
+                        }`}
+                      >
+                        {h2Num}
+                      </span>
+                    )}
+                    {/* Arrow for h3 sub-items */}
+                    {item.level === 3 && (
+                      <ChevronRight
+                        size={12}
+                        className={`shrink-0 transition-colors ${
+                          isActive ? "text-accent" : "text-text-muted"
+                        }`}
+                      />
+                    )}
+                    <span className="line-clamp-2 text-sm">{item.text}</span>
+                  </span>
+                </button>
+              );
+            })}
           </nav>
+
+          {/* Scroll progress indicator */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              <span>{Math.round(progress * 100)}%</span>
+              <div className="flex-1 h-1 bg-bg-card rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-accent rounded-full transition-all duration-200"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* Mobile TOC Button */}
+      {/* Mobile TOC Button — enhanced with section count badge */}
       <div className="lg:hidden fixed bottom-20 right-4 z-40">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-accent text-white shadow-lg hover:bg-accent-hover transition-colors"
+          className="relative flex items-center gap-2 px-5 py-3 rounded-full bg-accent text-white shadow-lg hover:bg-accent-hover transition-colors"
         >
           <List size={18} />
           <span className="text-sm font-medium">Contents</span>
+          {/* Section count badge */}
+          <span className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white text-accent text-[10px] font-bold shadow-sm">
+            {items.filter((i) => i.level === 2).length}
+          </span>
         </button>
       </div>
 
@@ -129,10 +187,15 @@ export default function TOCSidebar() {
               className="fixed bottom-0 left-0 right-0 max-h-[70vh] bg-bg-secondary rounded-t-2xl border-t border-border z-50 lg:hidden overflow-y-auto"
             >
               <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
-                    Table of Contents
-                  </h3>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">
+                      Table of Contents
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent text-xs font-bold">
+                      {items.filter((i) => i.level === 2).length} sections
+                    </span>
+                  </div>
                   <button
                     onClick={() => setIsOpen(false)}
                     className="p-1 text-text-muted hover:text-text-primary"
@@ -140,22 +203,60 @@ export default function TOCSidebar() {
                     <X size={20} />
                   </button>
                 </div>
+
+                {/* Mobile progress */}
+                <div className="mb-4 flex items-center gap-2 text-xs text-text-muted">
+                  <span>{Math.round(progress * 100)}% read</span>
+                  <div className="flex-1 h-1.5 bg-bg-card rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent rounded-full transition-all duration-200"
+                      style={{ width: `${progress * 100}%` }}
+                    />
+                  </div>
+                </div>
+
                 <nav className="flex flex-col gap-1">
-                  {items.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => scrollTo(item.id)}
-                      className={`text-left text-sm py-2.5 px-3 rounded-lg transition-colors ${
-                        item.level === 3 ? "pl-7" : "pl-3"
-                      } ${
-                        activeId === item.id
-                          ? "bg-accent-subtle text-accent font-medium"
-                          : "text-text-secondary hover:bg-bg-card"
-                      }`}
-                    >
-                      {item.text}
-                    </button>
-                  ))}
+                  {items.map((item, index) => {
+                    const h2Num = getH2Index(item, index);
+                    const isActive = activeId === item.id;
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => scrollTo(item.id)}
+                        className={`text-left py-3 px-3 rounded-lg transition-colors ${
+                          item.level === 3 ? "pl-10" : "pl-3"
+                        } ${
+                          isActive
+                            ? "bg-accent-subtle text-accent font-semibold"
+                            : "text-text-secondary hover:bg-bg-card"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          {h2Num !== null && (
+                            <span
+                              className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0 ${
+                                isActive
+                                  ? "bg-accent text-white"
+                                  : "bg-bg-card text-text-muted"
+                              }`}
+                            >
+                              {h2Num}
+                            </span>
+                          )}
+                          {item.level === 3 && (
+                            <ChevronRight
+                              size={14}
+                              className={`shrink-0 ${
+                                isActive ? "text-accent" : "text-text-muted"
+                              }`}
+                            />
+                          )}
+                          <span className="text-sm">{item.text}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </nav>
               </div>
             </motion.div>

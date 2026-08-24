@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import BackToTop from "@/components/ui/BackToTop";
+import SectionNav from "@/components/home/SectionNav";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -45,6 +46,10 @@ export const metadata: Metadata = {
       "Portfolio showcasing robotics, mechanical design, and IoT projects.",
     siteName: "Mohamed Ali Hamed Portfolio",
   },
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -77,6 +82,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main className="flex-1">{children}</main>
           <Footer />
           <BackToTop />
+          <SectionNav />
         </ThemeProvider>
       </body>
     </html>

@@ -7,7 +7,7 @@ import { personalInfo } from "@/data/personal";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <section id="hero" className="relative min-h-[90vh] flex items-center overflow-hidden scroll-mt-24">
       {/* Background gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
@@ -95,13 +95,19 @@ export default function Hero() {
                 className="group-hover:translate-x-1 transition-transform"
               />
             </Link>
-            <Link
-              href="/#contact"
-              className="flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-text-primary font-medium hover:border-accent hover:text-accent transition-all"
+            <button
+              onClick={() => {
+                const el = document.getElementById('contact');
+                if (el) {
+                  const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                  window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+              }}
+              className="flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-text-primary font-medium hover:border-accent hover:text-accent transition-all cursor-pointer"
             >
               <Mail size={18} />
               Contact Me
-            </Link>
+            </button>
           </motion.div>
 
           {/* Stats */}

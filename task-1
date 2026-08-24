@@ -1,0 +1,59 @@
+# Portfolio Build — Task Tracker
+
+## Phase 1: Foundation ✅
+- [x] Initialize Next.js 15 project (App Router, TypeScript, Tailwind)
+- [x] Install dependencies (framer-motion, three, @react-three/fiber, @react-three/drei, lucide-react)
+- [x] Create globals.css with full design system (dual color schemes, dark/light mode)
+- [x] Create ThemeContext (theme + color scheme + localStorage persistence)
+- [x] Add blocking theme script to prevent FOUC
+
+## Phase 2: Data Layer ✅
+- [x] Create `src/data/personal.ts` (bio, skills, experience, certifications, services)
+- [x] Create `src/data/projects.ts` (5 projects with full schemas)
+- [x] Create `src/data/lectures.ts` (6 lectures with placeholder data)
+
+## Phase 3: Layout Components ✅
+- [x] Navbar (fixed, responsive, theme/color toggles, mobile drawer)
+- [x] Footer (social links, quick nav)
+- [x] TOCSidebar (dynamic anchor navigation)
+- [x] BackToTop (floating button)
+
+## Phase 4: UI Components ✅
+- [x] SectionWrapper (fade-in-on-scroll)
+- [x] SocialIcons (SVG brand icons for LinkedIn, GitHub, YouTube)
+- [x] VideoEmbed (YouTube, Vimeo, HTML5 video)
+- [x] ModelViewer + ModelViewerCanvas (3D model viewer with Three.js)
+- [x] FilterBar (multi-select category + tag filtering)
+
+## Phase 5: Home Page Sections ✅
+- [x] Hero (animated gradient bg, staggered text, CTAs, stats)
+- [x] About (profile photo, gradient border, info cards)
+- [x] Skills (categorized cards with icon headers)
+- [x] FeaturedProjects (top 3 project cards)
+- [x] Experience (vertical timeline, alternating cards)
+- [x] Certifications (card grid, show more/less toggle)
+- [x] Services (service cards with hover gradient)
+- [x] CareerObjective (quote-style display)
+- [x] Contact (form + contact info + social links)
+
+## Phase 6: Projects Pages ✅
+- [x] ProjectCard component
+- [x] Projects listing page (`/projects`) with filtering
+- [x] Project detail page (`/projects/[slug]`) with async params
+- [x] ProjectDetailClient (sections, media, 3D models, TOC)
+
+## Phase 7: Lectures Page ✅
+- [x] LectureCard component
+- [x] VideoModal (full-screen with backdrop blur)
+- [x] Lectures page (`/lectures`) with tag filtering
+
+## Phase 8: Bug Fixes ✅
+- [x] Fix lucide-react brand icons (removed in latest version → custom SVGs)
+- [x] Fix SSG prerender error (useTheme default fallback)
+- [x] Fix Next.js 15+ async params in project detail page
+- [x] Add scroll-mt-24 to prevent section headers hidden behind navbar
+- [x] Add blocking theme script for FOUC prevention
+
+## Phase 9: Verification ✅
+- [x] `npm run build` passes (11/11 pages generated)
+- [x] Visual verification in browser (dark mode, all sections, navigation)
