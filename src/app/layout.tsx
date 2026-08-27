@@ -52,6 +52,9 @@ export const metadata: Metadata = {
     icon: "/favicon.png",
     apple: "/favicon.png",
   },
+  verification: {
+    google: "zVkzRuVU9z6YM2s9xnCB1I7iu0zyU6bWLEmwVFED5TY",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
