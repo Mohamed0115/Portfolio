@@ -30,12 +30,23 @@ export default function LectureCard({
         <div className="h-full rounded-xl bg-bg-card border border-border overflow-hidden card-hover flex flex-col">
           {/* Thumbnail - 2/3 */}
           <div className="relative h-48 bg-bg-secondary overflow-hidden">
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
-              }}
-            />
+            {lecture.thumbnail.startsWith("http") ? (
+              /* Real thumbnail from YouTube */
+              <img
+                src={lecture.thumbnail}
+                alt={lecture.title}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              /* Gradient placeholder for cards without a real thumbnail */
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background: `linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-to))`,
+                }}
+              />
+            )}
             {/* Play icon overlay */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-accent/90 flex items-center justify-center shadow-lg group-hover:bg-accent group-hover:scale-110 transition-all">
