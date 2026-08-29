@@ -16,8 +16,8 @@ export const lectures: Lecture[] = [
     description:
       "First lecture in material science discussing material properties and key concepts like stress and failure.",
     tags: ["Material Science"],
-    videoUrl: "https://www.youtube.com/embed/LNPiOAxFQ1k",
-    thumbnail: `https://img.youtube.com/vi/LNPiOAxFQ1k/hqdefault.jpg`,
+    videoUrl: "https://www.youtube.com/embed/uWFmI1NXu5k",
+    thumbnail: `https://img.youtube.com/vi/uWFmI1NXu5k/hqdefault.jpg`,
     duration: "27 min",
   },
   {

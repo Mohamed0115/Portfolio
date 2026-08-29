@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { List, X, ChevronRight } from "lucide-react";
 
@@ -15,6 +15,8 @@ export default function TOCSidebar() {
   const [activeId, setActiveId] = useState<string>("");
   const [isOpen, setIsOpen] = useState(false);
   const [progress, setProgress] = useState(0);
+  const isClickScrolling = useRef(false);
+  const scrollLockTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Detect headings
@@ -26,25 +28,37 @@ export default function TOCSidebar() {
     }));
     setItems(tocItems);
 
-    // Scroll-based active heading detection (more reliable than IntersectionObserver)
+    // Scroll-based active heading detection
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       setProgress(docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0);
 
-      // Find the active heading: last heading whose top is above 40% of viewport
-      let currentId = "";
+      // If user just clicked a TOC link, skip scroll detection until smooth scroll finishes
+      if (isClickScrolling.current) return;
+
       const headingsArr = document.querySelectorAll("h2[id], h3[id]");
+      if (headingsArr.length === 0) return;
+
+      // Bottom of page: activate last section
+      if (docHeight > 0 && scrollTop >= docHeight - 40) {
+        setActiveId(headingsArr[headingsArr.length - 1].id);
+        return;
+      }
+
+      // Find the active heading: the last heading whose top has reached near the navbar (<= 140px)
+      let currentId = "";
       for (const h of headingsArr) {
         const rect = h.getBoundingClientRect();
-        if (rect.top <= window.innerHeight * 0.4) {
+        if (rect.top <= 140) {
           currentId = h.id;
         }
       }
+
       if (currentId) {
         setActiveId(currentId);
-      } else if (headingsArr.length > 0) {
-        // At top of page, activate first heading
+      } else {
+        // At the very top of page before first heading
         setActiveId(headingsArr[0].id);
       }
     };
@@ -54,6 +68,7 @@ export default function TOCSidebar() {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      if (scrollLockTimer.current) clearTimeout(scrollLockTimer.current);
     };
   }, []);
 
@@ -62,9 +77,17 @@ export default function TOCSidebar() {
     if (el) {
       const yOffset = -100;
       const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
-      window.scrollTo({ top: y, behavior: "smooth" });
+      
+      isClickScrolling.current = true;
       setActiveId(id);
       setIsOpen(false);
+      
+      window.scrollTo({ top: y, behavior: "smooth" });
+
+      if (scrollLockTimer.current) clearTimeout(scrollLockTimer.current);
+      scrollLockTimer.current = setTimeout(() => {
+        isClickScrolling.current = false;
+      }, 700);
     }
   };
 

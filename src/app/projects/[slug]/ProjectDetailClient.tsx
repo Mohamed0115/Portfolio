@@ -189,7 +189,7 @@ export default function ProjectDetailClient({
                 {section.codeBlocks && section.codeBlocks.length > 0 && (
                   <div className="mt-4">
                     {section.codeBlocks.map((block, idx) => (
-                      <CodeBlock key={idx} code={block.code} language={block.language} />
+                      <CodeBlock key={idx} code={block.code} language={block.language} fileName={block.fileName} foldable={block.foldable} />
                     ))}
                   </div>
                 )}

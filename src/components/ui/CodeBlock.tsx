@@ -5,10 +5,13 @@ import { useState, useCallback } from "react";
 interface CodeBlockProps {
   code: string;
   language: string;
+  fileName?: string;
+  foldable?: boolean;
 }
 
-export default function CodeBlock({ code, language }: CodeBlockProps) {
+export default function CodeBlock({ code, language, fileName, foldable = false }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -16,7 +19,6 @@ export default function CodeBlock({ code, language }: CodeBlockProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement("textarea");
       textarea.value = code;
       document.body.appendChild(textarea);
@@ -32,7 +34,10 @@ export default function CodeBlock({ code, language }: CodeBlockProps) {
     <div className="code-block-container">
       {/* Header bar */}
       <div className="code-block-header">
-        <span className="code-block-language">{language}</span>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span className="code-block-language">{language}</span>
+          {fileName && <span className="code-block-filename">{fileName}</span>}
+        </div>
         <button
           onClick={handleCopy}
           className="code-block-copy"
@@ -61,9 +66,23 @@ export default function CodeBlock({ code, language }: CodeBlockProps) {
         </button>
       </div>
       {/* Code content */}
-      <pre className="code-block-pre">
-        <code className="code-block-code">{code}</code>
-      </pre>
+      <div className={`code-block-wrapper ${foldable && !expanded ? "code-block-folded" : ""}`}>
+        <pre className="code-block-pre">
+          <code className="code-block-code">{code}</code>
+        </pre>
+        {foldable && !expanded && (
+          <div className="code-block-fade" />
+        )}
+      </div>
+      {/* Expand / Fold toggle */}
+      {foldable && (
+        <div className="code-block-toggle">
+          <button onClick={() => setExpanded(!expanded)} className="code-block-toggle-btn">
+            <span>{expanded ? "Collapse Code" : "Show Full Code"}</span>
+            <span>{expanded ? "▲" : "▼"}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

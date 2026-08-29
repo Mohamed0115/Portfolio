@@ -14,6 +14,8 @@ export interface MediaItem {
 export interface CodeBlockData {
   language: string;
   code: string;
+  fileName?: string;
+  foldable?: boolean;
 }
 
 export interface ProjectSection {
@@ -130,7 +132,7 @@ export const projects: Project[] = [
 <div class="inline-project-image"><img src="/images/projects/robotic-arm/picture5.png" alt="Axis 4 — Wrist roll with bellows coupling" /><span>Axis 4 — Wrist roll with bellows coupling</span></div>
 
 <p><strong>Axes 5 & 6 — Wrist Pitch and Yaw (B & T):</strong> The wrist assembly features two tall curved support beams with a central hub housing the final two ABB M3EB 160A 4 motors. Chains from these motors transmit power to a compact differential bevel gear mechanism at the wrist center. The differential bevel gear system enables independent or combined control of the final two degrees of freedom — wrist pitch (Axis 5) and yaw (Axis 6). This arrangement provides full orientation capability for the end effector while maintaining a compact envelope. The central gear includes a through-hole and mounting interface for attaching grippers or tools, with integrated passages for pneumatic, electrical, and signal lines.</p>
-<div class="inline-video-embed"><iframe src="https://www.youtube.com/embed/bjgJ7LtNtfE" title="Axes 5 & 6 — Differential wrist mechanism in action" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`,
+<div class="inline-video-embed"><iframe src="https://www.youtube.com/embed/80aE5XF4T2M" title="Robotic Arm Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`,
         media: [],
       },
       {
@@ -337,51 +339,168 @@ export const projects: Project[] = [
     role: "IoT Developer",
     association: "Sector B5",
     description:
-      "Built an interactive IoT system using ESP32, integrating IR sensors and LED control through MQTT protocol for real-time remote monitoring and actuation via the IoT MQTT Panel app.",
+      "Explore an interactive IoT system built with an ESP32 microcontroller -- featuring a live demo video of the device in action, the full firmware source code ready to copy, and a detailed breakdown of every component, wiring connection, and MQTT topic used in the project.",
     thumbnail: "/images/projects/iot-project-thumb.jpg",
     coreCategory: ["IoT"],
     tags: ["ESP32", "MQTT", "Arduino", "IoT", "Wi-Fi", "Sensors"],
     isFeatured: true,
     featuredOrder: 3,
-    actionButtons: [],
+    actionButtons: [
+      {
+        label: "GitHub Repo",
+        type: "link",
+        url: "https://github.com/Mohamed0115/IOT_Project_sector_b5",
+        icon: "ExternalLink",
+      },
+    ],
     sections: [
       {
         id: "intro",
         title: "Introduction",
         content:
-          "The SectorB5 IoT Project is a smart connected system leveraging the ESP32 microcontroller to create real-time sensor monitoring and remote actuation capabilities. The system demonstrates foundational IoT principles — device connectivity, publish/subscribe messaging, and interactive control.",
-        media: [],
-      },
-      {
-        id: "system-architecture",
-        title: "System Architecture",
-        content:
-          "The ESP32 connects to a Wi-Fi network and the public MQTT broker at broker.emqx.io. It subscribes to the /sectorb5/msbah/3 topic to receive LED control commands ('on' or 'off'). The IR sensor continuously monitors for objects, publishing status updates to /sectorb5/msbah/1 and /sectorb5/msbah/2 every 500ms.",
+          `<p>The SectorB5 IoT Project is a hands-on exploration of Internet of Things technology, built around the ESP32 microcontroller. The system creates a real-time feedback loop between a physical IR sensor, an LED actuator, and a mobile phone app -- all communicating through the MQTT publish/subscribe protocol. The project was mentored by <strong>Omar Barakat</strong> at Sector B5.</p>
+<p>Users can remotely toggle the LED from their phone and simultaneously monitor whether the IR sensor detects an object -- demonstrating core IoT principles: device connectivity, message brokering, and bidirectional remote control.</p>`,
         media: [],
       },
       {
         id: "components",
-        title: "Components & Hardware",
+        title: "Components and Hardware",
         content:
-          "The hardware setup includes: 1 × ESP32 microcontroller (the brain of the project, handling Wi-Fi and MQTT communication), 1 × IR Sensor (detects the presence of objects), 1 × Red LED (indicates system status or responds to commands), 5 × Male-Male Jumper Wires, and 1 × Breadboard for prototyping.",
+          `<p>The hardware setup consists of an ESP32 microcontroller serving as the brain of the project (handling Wi-Fi and MQTT communication), an IR Sensor connected to GPIO 36 for object detection, a Red LED connected to GPIO 22 that responds to remote commands, five male-male jumper wires, and a breadboard for prototyping the circuit.</p>
+<div class="inline-project-image"><img src="/images/projects/iot-sectorb5/before.jpg" alt="Individual components before assembly" /><span>Individual components before assembly</span></div>
+<p>The IR sensor is wired to GPIO 36 on the ESP32, and the red LED to GPIO 22 with appropriate current-limiting. Jumper wires establish connections on the breadboard, keeping the setup organized and stable for reliable operation during testing.</p>
+<div class="inline-project-image"><img src="/images/projects/iot-sectorb5/after.jpg" alt="Assembled circuit on breadboard" /><span>Assembled circuit on breadboard</span></div>`,
         media: [],
       },
       {
-        id: "communication",
-        title: "MQTT Communication",
+        id: "how-it-works",
+        title: "How It Works",
         content:
-          "When an object is detected (IR reads 0), the system publishes 'object' and 'yes' to the designated topics. When no object is present, it sends 'noobject' and 'no'. The LED toggles based on received MQTT commands, creating a fully interactive IoT loop between the physical device and the mobile app.",
+          `<p>The ESP32 connects to a Wi-Fi network and establishes a connection with the public MQTT broker at broker.emqx.io on port 1883. Once connected, it subscribes to the /sectorb5/msbah/3 topic to listen for LED control commands. Sending "on" or "off" to this topic toggles the LED in real time.</p>
+<p>On the sensor side, the IR sensor continuously monitors for nearby objects. Every 500ms, the ESP32 publishes the detection status to two separate topics: /sectorb5/msbah/1 sends "object" or "noobject", and /sectorb5/msbah/2 sends "yes" or "no". This creates a fully interactive IoT loop between the physical device and the mobile app.</p>
+<table>
+<thead><tr><th>Topic</th><th>Direction</th><th>Data</th></tr></thead>
+<tbody>
+<tr><td>/sectorb5/msbah/1</td><td>Publishes</td><td>"object" or "noobject"</td></tr>
+<tr><td>/sectorb5/msbah/2</td><td>Publishes</td><td>"yes" or "no"</td></tr>
+<tr><td>/sectorb5/msbah/3</td><td>Subscribes</td><td>"on" or "off"</td></tr>
+</tbody>
+</table>`,
+        media: [],
+      },
+      {
+        id: "mobile-app",
+        title: "Mobile App Setup",
+        content:
+          `<p>The system is controlled and monitored through the <a href="https://play.google.com/store/apps/details?id=snr.lab.iotmqttpanel.prod" target="_blank" rel="noopener noreferrer" class="ext-link">IoT MQTT Panel</a> app, available on Android. After installing the app, add a new MQTT client configuration with the broker address broker.emqx.io and port 1883.</p>
+<p>Subscribe to /sectorb5/msbah/1 and /sectorb5/msbah/2 to monitor sensor data in real time. To control the LED, publish "on" or "off" to /sectorb5/msbah/3. Save the configuration and connect to start interacting with the project.</p>`,
+        media: [],
+      },
+      {
+        id: "demo",
+        title: "Demo",
+        content:
+          `<p>The video below shows the SectorB5 IoT system in action -- the LED toggles remotely through the mobile app while the IR sensor data updates in real time on screen.</p>
+<div class="inline-video-embed"><iframe src="https://www.youtube.com/embed/7IVduNk75OQ" title="SectorB5 IoT Project Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`,
         media: [],
       },
       {
         id: "code",
         title: "Code",
-        content: "<p>The ESP32 firmware handles Wi-Fi connectivity, MQTT pub/sub messaging, IR sensor reading, and LED actuation. The code uses the PubSubClient library for MQTT communication with the EMQX public broker.</p>",
+        content: `<p>The full ESP32 firmware is shown below. It handles Wi-Fi connectivity, MQTT publish/subscribe messaging, IR sensor reading, and LED actuation using the PubSubClient library for communication with the EMQX public broker.</p>`,
         media: [],
         codeBlocks: [
           {
             language: "C++",
-            code: `//Project\n\n#include <WiFi.h>    //1\n#include <PubSubClient.h>\n\n#define ssid  "MDM"\n#define pass  "3112003&7"\n#define led 22\n#define ir 36\n\nWiFiClient WiFiClienT;    \nPubSubClient client(WiFiClienT);   \n\nconst char broker[]="broker.emqx.io";  \nconst int port=1883;\n\nchar message[100];  // global\n\nvoid callback(char topic[] , byte* payload , unsigned int length  ){   \n  Serial.println("topic :");\n  Serial.println(topic);\n\n  for(int i=0 ; i< length ;i++){\n      \n      Serial.print((char)payload[i]);\n      message[i]=(char)payload[i];\n  }\n  message[length] = '\\0';\n  Serial.println(message);\n  \n  if(!strcmp(message,"off")){\n      digitalWrite(led,LOW);\n\n  }else if(!strcmp(message,"on")){\n        digitalWrite(led,HIGH);\n  }\n}\n\n\nvoid setup() {\n  \n  pinMode(led,OUTPUT); //led\n  pinMode(ir,INPUT); //ir\n  Serial.begin(9600);\n  WiFi.begin(ssid,pass);\n  \n  \n  while(WiFi.status()!=WL_CONNECTED){\n    Serial.println(WiFi.status());\n    delay(500);\n  }\n  Serial.println(WiFi.status());\n  Serial.println(WiFi.localIP());\n\n  client.setServer(broker,port);  \n  client.setCallback(callback);\n\n  while(!client.connect("Secttttor_Mo12126755123")){\n    Serial.println("not yet");\n    delay(500);\n  }\n  Serial.println("connected to broker");\n  while(!client.subscribe("/sectorb5/msbah/3")){\n    Serial.println("not yet");\n    delay(500);\n  }\n      Serial.println("i subscribed to led");  \n  \n}\n\nvoid loop() {\n  client.loop();\n  int read;\n  read = digitalRead(ir);\n  if (read==0){\n    client.publish("/sectorb5/msbah/1","object");\n    client.publish("/sectorb5/msbah/2","yes");\n        delay(500);\n\n    \n  }else{\n    client.publish("/sectorb5/msbah/1","noobject");\n    client.publish("/sectorb5/msbah/2","no");\n        delay(500);\n\n  }\n}`
+            fileName: "esp32_mqtt_firmware.ino",
+            foldable: true,
+            code: `//Project
+
+#include <WiFi.h>    //1
+#include <PubSubClient.h>
+
+#define ssid  "MDM"
+#define pass  "3112003&7"
+#define led 22
+#define ir 36
+
+WiFiClient WiFiClienT;    
+PubSubClient client(WiFiClienT);   
+
+const char broker[]="broker.emqx.io";  
+const int port=1883;
+
+char message[100];  // global
+
+void callback(char topic[] , byte* payload , unsigned int length  ){   
+  Serial.println("topic :");
+  Serial.println(topic);
+
+  for(int i=0 ; i< length ;i++){
+      
+      Serial.print((char)payload[i]);
+      message[i]=(char)payload[i];
+  }
+  message[length] = '\\0';
+  Serial.println(message);
+  
+  if(!strcmp(message,"off")){
+      digitalWrite(led,LOW);
+
+  }else if(!strcmp(message,"on")){
+        digitalWrite(led,HIGH);
+  }
+}
+
+
+void setup() {
+  
+  pinMode(led,OUTPUT); //led
+  pinMode(ir,INPUT); //ir
+  Serial.begin(9600);
+  WiFi.begin(ssid,pass);
+  
+  
+  while(WiFi.status()!=WL_CONNECTED){
+    Serial.println(WiFi.status());
+    delay(500);
+  }
+  Serial.println(WiFi.status());
+  Serial.println(WiFi.localIP());
+
+  client.setServer(broker,port);  
+  client.setCallback(callback);
+
+  while(!client.connect("Secttttor_Mo12126755123")){
+    Serial.println("not yet");
+    delay(500);
+  }
+  Serial.println("connected to broker");
+  while(!client.subscribe("/sectorb5/msbah/3")){
+    Serial.println("not yet");
+    delay(500);
+  }
+      Serial.println("i subscribed to led");  
+  
+}
+
+void loop() {
+  client.loop();
+  int read;
+  read = digitalRead(ir);
+  if (read==0){
+    client.publish("/sectorb5/msbah/1","object");
+    client.publish("/sectorb5/msbah/2","yes");
+        delay(500);
+
+    
+  }else{
+    client.publish("/sectorb5/msbah/1","noobject");
+    client.publish("/sectorb5/msbah/2","no");
+        delay(500);
+
+  }
+}`
           },
         ],
       },
